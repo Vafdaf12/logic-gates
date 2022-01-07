@@ -2,7 +2,7 @@ use hecs::{Entity, World};
 use raylib::{consts::MouseButton, math::Vector2, RaylibHandle};
 
 use crate::{
-    pin::{Pin, PIN_RADIUS},
+    pin::{Pin, PIN_RADIUS, PinKind},
     Parent, Position,
 };
 
@@ -29,4 +29,11 @@ pub fn get_global_position(app: &World, entity: Entity) -> Option<Vector2> {
 pub fn toggle_pin(app: &mut World, pin: Entity) {
     let mut from = app.get_mut::<Pin>(pin).unwrap();
     from.1 = !from.1;
+}
+
+pub fn can_connect(kind1: PinKind, kind2: PinKind) -> bool {
+    match kind1 {
+        PinKind::Input => kind2 != PinKind::Input,
+        PinKind::Output | PinKind::Constant => kind2 == PinKind::Input,
+    }
 }

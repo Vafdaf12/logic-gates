@@ -6,7 +6,7 @@ use raylib::{
 
 use crate::{chip::*, pin::*, Position};
 
-use super::utils::{collide_pin, toggle_pin};
+use super::utils::{collide_pin, toggle_pin, can_connect};
 
 pub fn connection_state(app: &mut World) {
     for (_, connection) in app.query::<&PinConnection>().iter() {
@@ -41,8 +41,14 @@ pub fn connection_builder(app: &mut World, rl: &RaylibHandle, mouse: Entity, bui
         connection_builder.from = None;
     }
     if let Some(connection) = connection_builder.build() {
+        let from_kind = app.get::<Pin>(connection.0).unwrap().0;
+        let to_kind = app.get::<Pin>(connection.1).unwrap().0;
+        
         drop(connection_builder);
-        app.spawn((connection,));
+        if can_connect(from_kind, to_kind) {
+
+            app.spawn((connection,));
+        }
     }
 }
 
