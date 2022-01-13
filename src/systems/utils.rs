@@ -3,7 +3,7 @@ use raylib::{consts::MouseButton, math::Vector2, RaylibHandle};
 
 use crate::{
     chip::{Chip, CHIP_WIDTH},
-    pin::{Pin, PinKind, PIN_RADIUS},
+    pin::{Pin, PinKind, PIN_RADIUS, PinConnection},
     Parent, Position,
 };
 
@@ -87,4 +87,19 @@ pub fn is_chip_pressed(app: &World, rl: &RaylibHandle, mouse: Entity, chip: Enti
 
 pub fn compute_chip_height(chip: &Chip) -> f32 {
     chip.inputs.len().max(chip.outputs.len()) as f32 * PIN_RADIUS * 3.0
+}
+
+pub fn fix_connection(kinds: (PinKind, PinKind), connection: &mut PinConnection) {
+    let from = connection.0;
+    let to = connection.1;
+
+    let (fkind, tkind) = kinds;
+
+    match tkind {
+        PinKind::Constant | PinKind::Output if fkind == PinKind::Input => {
+            connection.1 = from;
+            connection.0 = to;
+        }
+        _ => {}
+    }
 }

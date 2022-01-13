@@ -3,10 +3,7 @@ use raylib::{consts::MouseButton, RaylibHandle};
 
 use crate::{chip::*, pin::*, Dragging, Position};
 
-use super::utils::{
-    can_connect, get_global_position, is_chip_pressed, is_chip_released, is_pin_pressed,
-    is_pin_released, toggle_pin,
-};
+use super::utils::*;
 
 pub fn connection_state(app: &mut World) {
     for (_, connection) in app.query::<&PinConnection>().iter() {
@@ -38,12 +35,13 @@ pub fn connection_builder(app: &mut World, rl: &RaylibHandle, mouse: Entity, bui
     } else if rl.is_mouse_button_released(MouseButton::MOUSE_LEFT_BUTTON) {
         connection_builder.reset();
     }
-    if let Some(connection) = connection_builder.build() {
+    if let Some(mut connection) = connection_builder.build() {
         let from_kind = app.get::<Pin>(connection.0).unwrap().0;
         let to_kind = app.get::<Pin>(connection.1).unwrap().0;
 
         drop(connection_builder);
         if can_connect(from_kind, to_kind) {
+            fix_connection((from_kind, to_kind), &mut connection);
             app.spawn((connection,));
         }
     }
