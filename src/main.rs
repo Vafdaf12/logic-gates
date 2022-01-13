@@ -15,6 +15,7 @@ pub struct Name(String);
 pub struct Position(Vector2);
 pub struct Parent(Entity);
 pub struct Mouse;
+pub struct Dragging(Vector2);
 
 fn main() {
     let mut world = World::new();
@@ -44,6 +45,7 @@ fn main() {
 
     while !rl.window_should_close() {
         systems::update::mouse(&mut world, &rl, mouse);
+        systems::update::drag_chips(&mut world, &rl, mouse);
         systems::update::connection_builder(&mut world, &rl, mouse, builder);
         systems::update::toggle_pins(&mut world, &rl, mouse);
         systems::update::connection_state(&mut world);

@@ -45,7 +45,7 @@ pub fn connection_builders(app: &World, draw_handle: &mut RaylibDrawHandle, mous
 pub fn chips(app: &World, draw_handle: &mut RaylibDrawHandle) {
     for (e, (pos, chip)) in app.query::<(&Position, &Chip)>().iter() {
         let pos = pos.0;
-        let height = chip.inputs.len().max(chip.outputs.len()) as f32 * PIN_RADIUS * 3.0;
+        let height = compute_chip_height(&chip);
 
         draw_handle.draw_rectangle_v(pos, Vector2::new(CHIP_WIDTH, height), Color::ORANGE);
         if let Ok(name) = app.get::<Name>(e) {

@@ -1,9 +1,12 @@
 use hecs::{Entity, World};
 use raylib::{consts::MouseButton, RaylibHandle};
 
-use crate::{chip::*, pin::*, Position};
+use crate::{chip::*, pin::*, Dragging, Position};
 
-use super::utils::{can_connect, is_pin_pressed, is_pin_released, toggle_pin};
+use super::utils::{
+    can_connect, get_global_position, is_chip_pressed, is_chip_released, is_pin_pressed,
+    is_pin_released, toggle_pin,
+};
 
 pub fn connection_state(app: &mut World) {
     for (_, connection) in app.query::<&PinConnection>().iter() {
@@ -78,5 +81,41 @@ pub fn evaluate_chips(app: &mut World) {
                 Some(s) => pin.1 = s,
             }
         }
+    }
+}
+
+pub fn drag_chips(app: &mut World, rl: &RaylibHandle, mouse: Entity) {
+    let mouse_pos = get_global_position(app, mouse).unwrap();
+
+    let dragging = app
+        .query::<&Chip>()
+        .into_iter()
+        .map(|(e, _)| e)
+        .find(|e| is_chip_pressed(app, rl, mouse, *e));
+
+    if let Some(e) = dragging {
+        let pos = get_global_position(app, e).unwrap();
+        let delta = pos - mouse_pos;
+        app.insert(e, (Dragging(delta),)).unwrap();
+    }
+
+    let not_dragging: Vec<Entity> = app
+        .query::<&Chip>()
+        .with::<Dragging>()
+        .into_iter()
+        .map(|(e, _)| e)
+        .filter(|e| is_chip_released(app, rl, mouse, *e))
+        .collect();
+
+    for &elem in not_dragging.iter() {
+        app.remove_one::<Dragging>(elem).unwrap();
+    }
+
+    for (_, (pos, delta)) in app
+        .query_mut::<(&mut Position, &Dragging)>()
+        .with::<Chip>()
+        .into_iter()
+    {
+        *pos = Position(mouse_pos + delta.0);
     }
 }
