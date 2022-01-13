@@ -2,19 +2,34 @@ use hecs::{Entity, World};
 use raylib::{consts::MouseButton, math::Vector2, RaylibHandle};
 
 use crate::{
-    pin::{Pin, PIN_RADIUS, PinKind},
+    pin::{Pin, PinKind, PIN_RADIUS},
     Parent, Position,
 };
 
-pub fn collide_pin(app: &World, rl: &RaylibHandle, mouse: Entity, pin: Entity) -> bool {
-    let pos = get_global_position(app, pin).unwrap();
+pub fn is_pin_pressed(app: &World, rl: &RaylibHandle, mouse: Entity, pin: Entity) -> bool {
     let mouse_pos = app.get::<Position>(mouse).unwrap().0;
 
-    if !raylib::check_collision_point_circle(mouse_pos, pos, PIN_RADIUS) {
+    if !collide_pin(app, mouse_pos, pin) {
         return false;
     }
 
     rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON)
+}
+
+pub fn collide_pin(app: &World, point: Vector2, pin: Entity) -> bool {
+    let pos = get_global_position(app, pin).unwrap();
+
+    raylib::check_collision_point_circle(point, pos, PIN_RADIUS)
+}
+
+pub fn is_pin_released(app: &World, rl: &RaylibHandle, mouse: Entity, pin: Entity) -> bool {
+    let mouse_pos = app.get::<Position>(mouse).unwrap().0;
+
+    if !collide_pin(app, mouse_pos, pin) {
+        return false;
+    }
+
+    rl.is_mouse_button_released(MouseButton::MOUSE_LEFT_BUTTON)
 }
 
 pub fn get_global_position(app: &World, entity: Entity) -> Option<Vector2> {

@@ -26,10 +26,23 @@ impl PinConnectionBuilder {
         let from = self.from?;
         let to = self.to?;
 
-        self.from = None;
-        self.to = None;
+        self.reset();
+
+        if from == to {
+            return None;
+        }
+        println!("Connections");
 
         Some(PinConnection(from, to))
+    }
+
+    pub fn reset(&mut self) {
+        self.from = None;
+        self.to = None;
+    }
+
+    pub fn is_pending(&self) -> bool {
+        self.from.is_some()
     }
 }
 

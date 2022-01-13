@@ -1,12 +1,9 @@
 use hecs::{Entity, World};
-use raylib::{
-    consts::{KeyboardKey, MouseButton},
-    RaylibHandle,
-};
+use raylib::{consts::MouseButton, RaylibHandle};
 
 use crate::{chip::*, pin::*, Position};
 
-use super::utils::{collide_pin, toggle_pin, can_connect};
+use super::utils::{can_connect, is_pin_pressed, is_pin_released, toggle_pin};
 
 pub fn connection_state(app: &mut World) {
     for (_, connection) in app.query::<&PinConnection>().iter() {
@@ -21,46 +18,40 @@ pub fn mouse(app: &mut World, rl: &RaylibHandle, mouse: Entity) {
 pub fn connection_builder(app: &mut World, rl: &RaylibHandle, mouse: Entity, builder: Entity) {
     let mut connection_builder = app.get_mut::<PinConnectionBuilder>(builder).unwrap();
 
-    if !rl.is_key_down(KeyboardKey::KEY_LEFT_SHIFT) {
-        return;
+    if let Some((entity, _)) = app
+        .query::<(&Position, &Pin)>()
+        .iter()
+        .find(|(pin, _)| is_pin_pressed(app, rl, mouse, *pin))
+    {
+        connection_builder.from = Some(entity);
     }
 
     if let Some((entity, _)) = app
         .query::<(&Position, &Pin)>()
         .iter()
-        .find(|(pin, _)| collide_pin(app, rl, mouse, *pin))
+        .find(|(pin, _)| is_pin_released(app, rl, mouse, *pin))
     {
-        if connection_builder.from.is_none() {
-            connection_builder.from = Some(entity);
-        } else if connection_builder.to.is_none() && connection_builder.from.unwrap() != entity {
-            connection_builder.to = Some(entity);
-        }
-    } else if rl.is_mouse_button_pressed(MouseButton::MOUSE_LEFT_BUTTON)
-        && connection_builder.from.is_some()
-    {
-        connection_builder.from = None;
+        connection_builder.to = Some(entity);
+    } else if rl.is_mouse_button_released(MouseButton::MOUSE_LEFT_BUTTON) {
+        connection_builder.reset();
     }
     if let Some(connection) = connection_builder.build() {
         let from_kind = app.get::<Pin>(connection.0).unwrap().0;
         let to_kind = app.get::<Pin>(connection.1).unwrap().0;
-        
+
         drop(connection_builder);
         if can_connect(from_kind, to_kind) {
-
             app.spawn((connection,));
         }
     }
 }
 
 pub fn toggle_pins(app: &mut World, rl: &RaylibHandle, mouse: Entity) {
-    if rl.is_key_down(KeyboardKey::KEY_LEFT_SHIFT) {
-        return;
-    }
     let clicked: Vec<Entity> = app
         .query::<&Pin>()
         .into_iter()
         .filter(|(_, pin)| pin.0 == PinKind::Constant)
-        .filter(|(e, _)| collide_pin(app, rl, mouse, *e))
+        .filter(|(e, _)| is_pin_released(app, rl, mouse, *e))
         .map(|(e, ..)| e)
         .collect();
 
