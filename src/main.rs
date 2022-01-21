@@ -1,5 +1,6 @@
+use graphics::Renderer;
 use hecs::{Entity, World};
-use raylib::{color::Color, math::Vector2, prelude::RaylibDraw};
+use raylib::{color::Color, math::Vector2};
 
 pub mod chip;
 pub mod graphics;
@@ -51,12 +52,13 @@ fn main() {
         systems::update::connection_state(&mut world);
         systems::update::evaluate_chips(&mut world);
 
-        let mut d = rl.begin_drawing(&thread);
-        d.clear_background(Color::WHITE);
 
-        systems::graphics::chips(&world, &mut d);
-        systems::graphics::pins(&world, &mut d);
-        systems::graphics::connections(&world, &mut d);
-        systems::graphics::connection_builders(&world, &mut d, mouse);
+        let mut renderer = Renderer::begin(&mut rl, &thread);
+        renderer.clear(Color::WHITE);
+
+        systems::graphics::chips(&world, &mut renderer);
+        systems::graphics::pins(&world, &mut renderer);
+        systems::graphics::connections(&world, &mut renderer);
+        systems::graphics::connection_builders(&world, &mut renderer, mouse);
     }
 }

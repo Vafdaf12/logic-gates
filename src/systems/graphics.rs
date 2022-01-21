@@ -1,19 +1,19 @@
 use hecs::{Entity, World};
 use raylib::prelude::*;
 
-use crate::{chip::*, graphics::*, pin::*, Name, Position};
+use crate::{chip::*, graphics::*, pin::*, Position};
 
 use super::utils::*;
 
-pub fn pins(app: &World, draw_handle: &mut RaylibDrawHandle) {
+pub fn pins(app: &World, renderer: &mut Renderer) {
     for (e, (pin, _)) in app.query::<(&Pin, &Position)>().iter() {
         let pos = get_global_position(app, e).unwrap();
 
-        draw_pin2(draw_handle, pos, pin);
+        renderer.draw_pin(pos, pin);
     }
 }
 
-pub fn connections(app: &World, draw_handle: &mut RaylibDrawHandle) {
+pub fn connections(app: &World, renderer: &mut Renderer) {
     for (_, connection) in app.query::<&PinConnection>().iter() {
         let p1 = get_global_position(app, connection.0).unwrap();
         let p2 = get_global_position(app, connection.1).unwrap();
@@ -22,11 +22,11 @@ pub fn connections(app: &World, draw_handle: &mut RaylibDrawHandle) {
 
         let color = if state { Color::RED } else { Color::BLACK };
 
-        draw_connection(draw_handle, p1, p2, 2.0, color);
+        renderer.draw_connection(p1, p2, 2.0, color);
     }
 }
 
-pub fn connection_builders(app: &World, draw_handle: &mut RaylibDrawHandle, mouse: Entity) {
+pub fn connection_builders(app: &World, renderer: &mut Renderer, mouse: Entity) {
     let mouse_pos = app.get::<Position>(mouse).unwrap().0;
 
     for (_, builder) in app.query::<&PinConnectionBuilder>().iter() {
@@ -37,25 +37,15 @@ pub fn connection_builders(app: &World, draw_handle: &mut RaylibDrawHandle, mous
                 Some(e) => get_global_position(app, e).unwrap(),
             };
 
-            draw_connection(draw_handle, p1, p2, 1.0, Color::BLUE);
+            renderer.draw_connection(p1, p2, 1.0, Color::BLUE);
         }
     }
 }
 
-pub fn chips(app: &World, draw_handle: &mut RaylibDrawHandle) {
-    for (e, (pos, chip)) in app.query::<(&Position, &Chip)>().iter() {
+pub fn chips(app: &World, renderer: &mut Renderer) {
+    for (_, (pos, chip)) in app.query::<(&Position, &Chip)>().iter() {
         let pos = pos.0;
-        let height = compute_chip_height(&chip);
 
-        draw_handle.draw_rectangle_v(pos, Vector2::new(CHIP_WIDTH, height), Color::ORANGE);
-        if let Ok(name) = app.get::<Name>(e) {
-            draw_handle.draw_text(
-                &name.0,
-                pos.x as i32 + 10,
-                pos.y as i32 + 5,
-                20,
-                Color::BLACK,
-            );
-        }
+        renderer.draw_chip(pos, &chip);
     }
 }
