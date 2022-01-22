@@ -23,15 +23,15 @@ fn main() {
 
     let mouse = world.spawn((Mouse, Position(Vector2::zero())));
 
-    let _e1 = spawn_pin(&mut world, Vector2::new(100.0, 200.0), PinKind::Constant);
-    let _e2 = spawn_pin(&mut world, Vector2::new(200.0, 300.0), PinKind::Input);
+    let _e1 = spawn_pin(&mut world, Vector2::new(20.0, 200.0), PinKind::Constant);
+    let _e2 = spawn_pin(&mut world, Vector2::new(20.0, 250.0), PinKind::Constant);
 
     let builder = world.spawn((PinConnectionBuilder {
         from: None,
         to: None,
     },));
 
-    let _chip = spawn_chip(&mut world, None, Vector2::new(400.0, 100.0), 2, 1, |pins| {
+    let _chip = Chip::spawn(&mut world, None, Vector2::new(400.0, 100.0), 2, 1, |pins| {
         let result = pins.into_iter().reduce(|a, b| a && b).unwrap_or(false);
 
         vec![result]
@@ -52,7 +52,6 @@ fn main() {
         systems::update::connection_state(&mut world);
         systems::update::evaluate_chips(&mut world);
 
-
         let mut renderer = Renderer::begin(&mut rl, &thread);
         renderer.clear(Color::WHITE);
 
@@ -60,5 +59,7 @@ fn main() {
         systems::graphics::pins(&world, &mut renderer);
         systems::graphics::connections(&world, &mut renderer);
         systems::graphics::connection_builders(&world, &mut renderer, mouse);
+
+        renderer.draw_text(Vector2::new(20.0, 20.0), "AND");
     }
 }

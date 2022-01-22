@@ -10,53 +10,56 @@ pub struct Chip {
     pub outputs: Vec<Entity>,
     pub evaluator: ChipEvaluator,
 }
-pub fn spawn_chip(
-    app: &mut World,
-    name: Option<String>,
-    pos: Vector2,
-    n_inputs: u8,
-    n_outputs: u8,
-    evaluator: ChipEvaluator,
-) -> Entity {
-    let chip = app.spawn((Position(pos),));
 
-    let mut inputs: Vec<Entity> = Vec::new();
-    let mut outputs: Vec<Entity> = Vec::new();
+impl Chip {
+    pub fn spawn(
+        app: &mut World,
+        name: Option<String>,
+        pos: Vector2,
+        n_inputs: u8,
+        n_outputs: u8,
+        evaluator: ChipEvaluator,
+    ) -> Entity {
+        let chip = app.spawn((Position(pos),));
 
-    for i in 0..n_inputs {
-        let pin = spawn_pin(
-            app,
-            Vector2::new(0.0, PIN_RADIUS * 3.0 * i as f32),
-            PinKind::Input,
-        );
+        let mut inputs: Vec<Entity> = Vec::new();
+        let mut outputs: Vec<Entity> = Vec::new();
 
-        app.insert(pin, (Parent(chip),)).unwrap();
+        for i in 0..n_inputs {
+            let pin = spawn_pin(
+                app,
+                Vector2::new(0.0, PIN_RADIUS * 3.0 * i as f32),
+                PinKind::Input,
+            );
 
-        inputs.push(pin);
+            app.insert(pin, (Parent(chip),)).unwrap();
+
+            inputs.push(pin);
+        }
+
+        for i in 0..n_outputs {
+            let pin = spawn_pin(
+                app,
+                Vector2::new(CHIP_WIDTH, PIN_RADIUS * 3.0 * i as f32),
+                PinKind::Output,
+            );
+            app.insert(pin, (Parent(chip),)).unwrap();
+
+            outputs.push(pin);
+        }
+
+        app.insert(
+            chip,
+            (Chip {
+                inputs,
+                outputs,
+                evaluator,
+            },),
+        )
+        .unwrap();
+        if let Some(name) = name {
+            app.insert(chip, (Name(name),)).unwrap();
+        }
+        chip
     }
-
-    for i in 0..n_outputs {
-        let pin = spawn_pin(
-            app,
-            Vector2::new(CHIP_WIDTH, PIN_RADIUS * 3.0 * i as f32),
-            PinKind::Output,
-        );
-        app.insert(pin, (Parent(chip),)).unwrap();
-
-        outputs.push(pin);
-    }
-
-    app.insert(
-        chip,
-        (Chip {
-            inputs,
-            outputs,
-            evaluator,
-        },),
-    )
-    .unwrap();
-    if let Some(name) = name {
-        app.insert(chip, (Name(name),)).unwrap();
-    }
-    chip
 }

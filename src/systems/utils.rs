@@ -3,7 +3,7 @@ use raylib::{consts::MouseButton, math::Vector2, RaylibHandle};
 
 use crate::{
     chip::{Chip, CHIP_WIDTH},
-    pin::{Pin, PinKind, PIN_RADIUS, PinConnection},
+    pin::{Pin, PinConnection, PinKind, PIN_RADIUS},
     Parent, Position,
 };
 
